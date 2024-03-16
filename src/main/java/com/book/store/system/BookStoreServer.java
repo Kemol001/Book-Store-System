@@ -7,7 +7,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import Handlers.ClientHandler;
+import java.util.logging.Handler;
+
+import com.book.store.system.Handlers.ClientHandler;
+
 import java.sql.*;
 
 
@@ -43,6 +46,4 @@ public class BookStoreServer {
             }
         }
     }
-    
-    
 }
