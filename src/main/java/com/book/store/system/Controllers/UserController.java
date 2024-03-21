@@ -32,15 +32,16 @@ public class UserController {
         String[] loginInfo = User.getLoginInfo(connection,userName);
         if(loginInfo == null) return 1;
         if(!BCrypt.checkpw(password, loginInfo[0])) return 2;
+        if(!User.UpdateLoginStatus(connection, userName, true)) return 3;
         this.userName = userName;
         this.userType = loginInfo[1];
-        if(!User.UpdateLoginStatus(connection, userName, true)) return 3;
         return 0;
     }
 
     
     public boolean logout() {
         try {
+            if(!User.UpdateLoginStatus(connection, userName, false)) return false;
             this.userName = null;
             connection.close();
             return true;
