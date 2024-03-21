@@ -1,4 +1,6 @@
+
 package com.book.store.system.Db;
+
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -25,13 +27,13 @@ public class Db {
                 return null;
             }
         }
+
         return connection;
     }
-
     public static boolean init(){
         try {
             connection = DriverManager.getConnection(connectioString);
-            if(User.init(connection) && Book.init(connection) && Request.init(connection))
+            if(new User().init(connection) && new Book().init(connection) && new Request().init(connection))
                 return true;
         } catch (SQLException e) {
             // e.printStackTrace();
@@ -40,5 +42,5 @@ public class Db {
         }
         return false;
     }
-    
+
 }

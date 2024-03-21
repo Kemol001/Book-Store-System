@@ -2,7 +2,7 @@ package com.book.store.system.Entities;
 
 import java.sql.*;
 
-public class User {
+public class User implements DBObj{
     public String name;
     public String userName;
     public String password;
@@ -10,7 +10,7 @@ public class User {
     public boolean isLoggedIn = false;
 
 
-    public static boolean init(Connection connection){
+    public boolean init(Connection connection){
         try{
             Statement statement = connection.createStatement();
             statement.executeUpdate("create table if not exists users (id INTEGER PRIMARY KEY, username varchar(255), password varchar(255), user_type varchar(255), is_locked boolean)");
