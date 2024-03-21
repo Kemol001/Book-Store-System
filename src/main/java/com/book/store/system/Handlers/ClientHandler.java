@@ -1,62 +1,65 @@
 package com.book.store.system.Handlers;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
+
+import com.book.store.system.Controllers.UserController;
 
 public class ClientHandler implements Runnable {
 
     private final Socket clientSocket;
-    private final PrintWriter writer;
+    private final BufferedWriter writer;
+    private final BufferedReader reader;
+    private UserController userController = new UserController();
 
     public ClientHandler(Socket clientSocket) throws IOException {
         this.clientSocket = clientSocket;
-        this.writer = new PrintWriter(clientSocket.getOutputStream(), true);
+        this.writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        this.reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     }
 
-    // @Override
+
+    @Override
     public void run() {
-    //     try (
-    //         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))
-    //     ) {
-    //         String userName = reader.readLine();
-    //         System.out.println("New user: " + userName);
-
-    //         // Notify all users about the current highest bid
-    //         broadcast("New user " + userName + " joined the auction. Current highest bid: " + highestBid);
-
-    //         String inputLine;
-    //         while ((inputLine = reader.readLine()) != null) {
-    //             try {
-    //                 int bid = Integer.parseInt(inputLine);
-    //                 if (bid > highestBid) {
-    //                     highestBid = bid;
-    //                     // Notify all users about the new highest bid
-    //                     broadcast("New highest bid: " + highestBid + " by " + userName);
-    //                 }
-    //             } catch (NumberFormatException e) {
-    //                 System.out.println("Invalid bid format from user " + userName);
-    //             }
-    //         }
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     } finally {
-    //         try {
-    //             clientSocket.close();
-    //         } catch (IOException e) {
-    //             e.printStackTrace();
-    //         }
-    //     }
-    // }
-
-    // private void broadcast(String message) {
-    //     for (ClientHandler client : clients) {
-    //         if (client != this) {
-    //             client.writer.println(message);
-    //         }
-    //     }
+        try{
+            writer.write("Welcome to the Book Store!\n==========\n");
+            while(true){
+                writer.write("1- Register\n2- Login\n3- Exit\n==========\n");
+                writer.flush();
+                String inputLine = reader.readLine();
+                writer.write("Enter your username: ");
+                writer.flush();
+                String userName = reader.readLine();
+                writer.write("Enter your password: ");
+                writer.flush();
+                String password = reader.readLine();
+                if(inputLine.equals("1")){
+                    // register(userName, password);
+                } else if(inputLine.equals("2")){
+                    // login(userName, password);
+                } else if(inputLine.equals("3")){
+                    writer.write("Goodbye!");
+                    writer.flush();
+                    break;
+                } else {
+                    writer.write("Invalid input\n==========\n");
+                    writer.flush();
+                }
+                System.out.println("New user: " + userName);
+                writer.write("\n");
+            }
+            clientSocket.close();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
+
 }
 

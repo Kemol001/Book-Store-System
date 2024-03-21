@@ -1,14 +1,14 @@
 package com.book.store.system;
-import java.io.BufferedReader;
+
+
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import Handlers.ClientHandler;
-import java.sql.*;
+
+import com.book.store.system.Db.Db;
+import com.book.store.system.Handlers.*;
 
 
 public class BookStoreServer {
@@ -22,10 +22,14 @@ public class BookStoreServer {
             serverSocket = new ServerSocket(PORT);
             System.out.println("Book Store Server is running on port : " + PORT);
 
+            if(!Db.init()){
+                System.out.println("Error while initializing the database");
+                return;
+            }
+
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("New client connected: " + clientSocket);
-
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 clients.add(clientHandler);
                 Thread clientThread = new Thread(clientHandler);

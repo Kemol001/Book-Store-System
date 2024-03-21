@@ -1,5 +1,7 @@
 package com.book.store.system.Entities;
 
+import java.sql.Connection;
+
 public class Book {
     private String title;
     private String author;
@@ -16,6 +18,18 @@ public class Book {
         this.owner = owner;
         this.borrower = null;
     }
+
+    public static boolean init(Connection connection){
+        return true;
+        // try{
+        //     Statement statement = connection.createStatement();
+        //     statement.executeUpdate("create table if not exists requests (id int primary key auto_increment, user_id int, book_id int, status varchar(255), date date)");
+        //     return true;
+        // }catch(Exception e){
+        //     e.printStackTrace();
+        // }
+    }
+
 
     public void borrow(User borrower){this.borrower = borrower;}
     public void unBorrow(){this.borrower=null;}
