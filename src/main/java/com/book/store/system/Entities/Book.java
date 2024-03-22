@@ -10,15 +10,26 @@ public class Book implements DBObj{
     private User owner;
     private User borrower;
 
-    public boolean init(Connection cn){
+    public boolean init(Connection connection){
         try{
-            // String sqlStatement = "CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT, genre TEXT, price REAL, owner INTEGER, borrower INTEGER)";
-            // cn.createStatement().executeQuery(sqlStatement);
+            String sqlStatement = "create table if not exists books "
+            +"(id INTEGER PRIMARY KEY, "
+            +"title varchar(255), "
+            +"author varchar(255), "
+            +"genre varchar(255), "
+            +"price double, "
+            +"owner_id INTEGER, "
+            +"borrower_id INTEGER, "
+            +"FOREIGN KEY('owner_id') REFERENCES users('id') "
+            +"FOREIGN KEY('borrower_id') REFERENCES users('id'))";
+
+            connection.createStatement().executeUpdate(sqlStatement);
             return true;
         }catch(Exception e){
             e.printStackTrace();
-            return false;
+            System.out.println("Error while creating the books table");
         }
+        return false;
     }
 
     public Book(){

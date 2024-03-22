@@ -2,6 +2,7 @@ package com.book.store.system;
 
 import java.io.*;
 import java.net.*;
+import java.util.Scanner;
 
 public class BookStoreClient {
     public static void main(String[] args) {
@@ -11,16 +12,24 @@ public class BookStoreClient {
 
         try {
             Socket socket = new Socket(hostname, port);
-            
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            writer.write("*:5:10");
-            writer.newLine();
-            writer.flush();
-
-            // get the result from the server
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            
-            System.out.println("The result sent from the server : " + reader.readLine());
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            Scanner scanner = new Scanner(System.in);
+
+            String text = "";
+
+            while(true){
+
+                while(!(text = reader.readLine()).equals(Constants.EOM)){
+                    System.out.println(text);
+                }
+                if(text.equals(Constants.EXIT)) break;
+                writer.write(scanner.nextLine());
+                writer.newLine();
+                writer.flush();
+            }
+
+            scanner.close();
             reader.close();
             writer.close();
             socket.close();

@@ -12,8 +12,13 @@ public class User implements DBObj{
 
     public boolean init(Connection connection){
         try{
-            Statement statement = connection.createStatement();
-            statement.executeUpdate("create table if not exists users (id INTEGER PRIMARY KEY, username varchar(255), password varchar(255), user_type varchar(255), is_locked boolean)");
+            String sqlStatement = "create table if not exists users "
+            +"(id INTEGER PRIMARY KEY, "
+            +"username varchar(255), "
+            +"password varchar(255), "
+            +"user_type varchar(255))";
+
+            connection.createStatement().executeUpdate(sqlStatement);
             return true;
         }catch(Exception e){
             //e.printStackTrace();
@@ -38,24 +43,13 @@ public class User implements DBObj{
     public static String[] getLoginInfo(Connection connection , String userName){
         try{
             Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery("select password,user_type from users where username = " + userName);
-            return new String[] {rs.getString("password"),rs.getString("user_type")};
+            ResultSet rs = statement.executeQuery("select password,user_type,id from users where username = " + userName);
+            return new String[] {rs.getString("password"),rs.getString("id"),rs.getString("user_type")};
         }catch(Exception e){
             e.printStackTrace();
         }
         return null;
     }
-
-    public static boolean UpdateLoginStatus(Connection connection, String userName, boolean status){
-        try{
-            Statement statement = connection.createStatement();
-            return statement.executeUpdate("update users set is_locked = " + status + " where username = " + userName) > 0;
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        return false;
-    }
-
 
     public String getUserType(){return this.userType;}
 }

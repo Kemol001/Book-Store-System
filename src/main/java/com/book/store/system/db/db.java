@@ -37,7 +37,6 @@ public class Db {
                 return true;
         } catch (SQLException e) {
             // e.printStackTrace();
-            System.out.println("Error while initializing the database");
             return false;
         }
         return false;
