@@ -3,6 +3,7 @@ package com.book.store.system.Entities;
 import java.sql.*;
 
 public class User implements DBObj{
+    public int userid;
     public String userName;
     public String password;
     public String userType;
@@ -41,7 +42,7 @@ public class User implements DBObj{
     }
 
 
-    public static User getLoginInfo(Connection connection , String userName){
+    public User getLoginInfo(Connection connection , String userName){
         try{
             String sqlStatement = "SELECT * FROM users WHERE username = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
@@ -49,6 +50,7 @@ public class User implements DBObj{
             ResultSet resultSet = preparedStatement.executeQuery();
             if(resultSet.next()){
                 User user = new User();
+                user.userid =  resultSet.getInt("id");
                 user.userName = resultSet.getString("username");
                 user.password = resultSet.getString("password");
                 user.userType = resultSet.getString("user_type");

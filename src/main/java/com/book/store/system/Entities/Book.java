@@ -45,7 +45,7 @@ public class Book implements DBObj{
     }
 
 
-    public Book(Connection connection, String title,String author,String genre,double price,int ownerId){
+    public static boolean addBook(Connection connection, String title,String author,String genre,double price,int ownerId){
         try {
             String sqlStatement = "INSERT INTO books (title, author, genre, price, owner_id) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
@@ -54,11 +54,12 @@ public class Book implements DBObj{
             preparedStatement.setString(3, genre);
             preparedStatement.setDouble(4, price);
             preparedStatement.setInt(5, ownerId);
-            preparedStatement.executeUpdate();
+            return preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             // e.printStackTrace();
             System.out.println("Error while inserting the book");
         }
+        return false;
     }
 
 
@@ -121,11 +122,12 @@ public class Book implements DBObj{
     }
 
 
-    public boolean delete(Connection connection,int bookId){
+    public static boolean delete(Connection connection,int bookId,int ownerId){
         try {
-            String sqlStatement = "DELETE FROM books WHERE id = ?";
+            String sqlStatement = "DELETE FROM books WHERE id = ? AND owner_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
             preparedStatement.setInt(1, bookId);
+            preparedStatement.setInt(2, ownerId);
             return preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             // e.printStackTrace();
@@ -135,7 +137,7 @@ public class Book implements DBObj{
     }
 
 
-    public ArrayList<Book> searchBooks(Connection connection, Map<String,String> attributes) {
+    public static ArrayList<Book> search(Connection connection, Map<String,String> attributes) {
         ArrayList<Book> books = new ArrayList<>();
         try {
             String sqlStatement = "SELECT * FROM books WHERE ";

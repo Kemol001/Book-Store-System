@@ -1,22 +1,16 @@
 package com.book.store.system.Controllers;
 
 import org.mindrot.jbcrypt.BCrypt;
-import org.sqlite.ExtendedCommand.SQLExtension;
 
 import java.sql.*;
 
-import com.book.store.system.Db.Db;
 import com.book.store.system.Entities.User;
 
 public class UserController {
     private User user;
-    private Connection connection;
 
-    public UserController() {
-        this.connection = Db.connect();
-    }
 
-    public int register(String userName, String password, String userType) {
+    public int register(Connection connection,String userName, String password, String userType) {
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         return User.createUser(connection,userName, hashedPassword, userType) ? 200 : 500;
     }
@@ -31,11 +25,10 @@ public class UserController {
      * 404 - user not found
      * 401 - password is incorrect
      */
-    public int login(String userName, String password) {
-        User loginInfo = User.getLoginInfo(connection,userName);
-        if(loginInfo == null) return 404;
-        if(!BCrypt.checkpw(password, loginInfo.password)) return 401;
-        this.user = loginInfo;
+    public int login(Connection connection,String userName, String password) {
+        user.getLoginInfo(connection,userName);
+        if(user.userName.equals(null)) return 404;
+        if(!BCrypt.checkpw(password, user.password)) return 401;
         return 200;
     }
 
@@ -45,7 +38,7 @@ public class UserController {
     }
 
     
-    public boolean logout() {
+    public boolean logout(Connection connection) {
         try {
             this.user = null;
             connection.close();
