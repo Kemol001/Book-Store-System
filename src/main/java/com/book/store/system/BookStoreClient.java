@@ -20,7 +20,7 @@ public class BookStoreClient {
 
             while(true){
 
-                while(!(text = reader.readLine()).equals(Constants.EOM)){
+                while(!(text = reader.readLine()).equals(Constants.EOM) && !text.equals(Constants.EXIT)){
                     System.out.println(text);
                 }
                 if(text.equals(Constants.EXIT)) break;

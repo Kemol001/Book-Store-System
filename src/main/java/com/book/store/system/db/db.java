@@ -10,30 +10,37 @@ import com.book.store.system.Entities.*;
 
 public class Db {
 
+
     private static String connectioString = "jdbc:sqlite:library.db";
     private static Connection connection = null;
+
 
     private Db(){
         //This is a singleton class
     }
 
+
     public static Connection connect(){
-        if(connection == null){
+        // if(connection == null){
             try {
                 return DriverManager.getConnection(connectioString);
             } catch (SQLException e) {
                 System.out.println("Error while connecting to the database");
-                e.printStackTrace();
+                // e.printStackTrace();
                 return null;
             }
-        }
-
-        return connection;
+        // }
+        // return connection;
     }
+
+
     public static boolean init(){
         try {
             connection = DriverManager.getConnection(connectioString);
-            if(new User().init(connection) && new Book().init(connection) && new Request().init(connection))
+            if( new User().init(connection) && 
+                new Book().init(connection) && 
+                new Request().init(connection) && 
+                new Message().init(connection) )
                 return true;
         } catch (SQLException e) {
             // e.printStackTrace();
@@ -42,4 +49,5 @@ public class Db {
         return false;
     }
 
+    
 }

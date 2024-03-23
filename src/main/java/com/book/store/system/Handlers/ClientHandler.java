@@ -79,11 +79,16 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try{
-            startPage();
 
-            if(!userController.isLoggedIn()){
-                clientSocket.close();
-                return;
+            while(true){
+                startPage();
+    
+                if(!userController.isLoggedIn()){
+                    break;
+                }
+
+                
+
             }
 
             
