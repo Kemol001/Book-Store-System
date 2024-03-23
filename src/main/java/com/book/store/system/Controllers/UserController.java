@@ -9,9 +9,7 @@ import com.book.store.system.Db.Db;
 import com.book.store.system.Entities.User;
 
 public class UserController {
-    private String userId;
-    private String userName;
-    private String userType;
+    private User user;
     private Connection connection;
 
     public UserController() {
@@ -23,6 +21,9 @@ public class UserController {
         return User.createUser(connection,userName, hashedPassword, userType) ? 200 : 500;
     }
 
+    public User getUser() {
+        return user;
+    }   
 
     /**
      * @return int
@@ -31,26 +32,22 @@ public class UserController {
      * 401 - password is incorrect
      */
     public int login(String userName, String password) {
-        String[] loginInfo = User.getLoginInfo(connection,userName);
+        User loginInfo = User.getLoginInfo(connection,userName);
         if(loginInfo == null) return 404;
-        if(!BCrypt.checkpw(password, loginInfo[0])) return 401;
-        this.userName = userName;
-        this.userId = loginInfo[1];
-        this.userType = loginInfo[2];
+        if(!BCrypt.checkpw(password, loginInfo.password)) return 401;
+        this.user = loginInfo;
         return 200;
     }
 
 
     public boolean isLoggedIn() {
-        return (this.userName != null && this.userType != null && this.userId != null);
+        return (this.user != null);
     }
 
     
     public boolean logout() {
         try {
-            this.userName = null;
-            this.userType = null;
-            this.userId = null;
+            this.user = null;
             connection.close();
             return true;
         } catch (SQLException e) {

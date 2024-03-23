@@ -107,7 +107,7 @@ public class Request implements DBObj{
     }
 
 
-    public ArrayList<Request> getRequests(Connection connection, String userType ,int userId){
+    public ArrayList<Request> getUserRequests(Connection connection, String userType ,int userId){
         ArrayList<Request> requests = new ArrayList<>();
         try {
             String sqlStatement = "SELECT * FROM requests WHERE ?_id = ?";
@@ -143,4 +143,31 @@ public class Request implements DBObj{
         }
         return null;
     }
+
+    
+    public ArrayList<Request> getAllRequests(Connection connection, String status){
+        ArrayList<Request> requests = new ArrayList<>();
+        try {
+            if(status.equals("all"))
+                status = ".*";
+            String sqlStatement = "SELECT * FROM requests where status like ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
+            preparedStatement.setString(1, status);
+            var resultSet = preparedStatement.executeQuery(sqlStatement);
+            while(resultSet.next()){
+                Request request = new Request();
+                request.userId = resultSet.getInt("borrower_id");
+                request.bookId = resultSet.getInt("book_id");
+                request.status = resultSet.getString("status");
+                request.date = new Date(resultSet.getLong("date"));
+                requests.add(request);
+            }
+            return requests;
+        } catch (SQLException e) {
+            // e.printStackTrace();
+            System.out.println("Error while getting the requests");
+        }
+        return null;
+    }
+    
 }

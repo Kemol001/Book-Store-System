@@ -18,12 +18,13 @@ public class BookStoreClient {
 
             String text = "";
 
-            while(true){
+            while (true) {
 
-                while(!(text = reader.readLine()).equals(Constants.EOM) && !text.equals(Constants.EXIT)){
+                while (!(text = reader.readLine()).equals(Constants.EOM) && !text.equals(Constants.EXIT)) {
                     System.out.println(text);
                 }
-                if(text.equals(Constants.EXIT)) break;
+                if (text.equals(Constants.EXIT))
+                    break;
                 writer.write(scanner.nextLine());
                 writer.newLine();
                 writer.flush();

@@ -9,12 +9,12 @@ import java.util.Map;
 
 
 public class Book implements DBObj{
-    private String title;
-    private String author;
-    private String genre;
-    private double price;
-    private int ownerId;
-    private int borrowerId;
+    public String title;
+    public String author;
+    public String genre;
+    public double price;
+    public int ownerId;
+    public int borrowerId;
     
 
     public boolean init(Connection connection){
@@ -170,15 +170,30 @@ public class Book implements DBObj{
     }
 
 
-    public Map<String,Integer> getB(Connection connection){
+    public ArrayList<Book> getAllBorrowed(Connection connection){
 
-        // try{
-        //     String sqlStatement = "Select * from books";
-        // }
+        ArrayList<Book> books = new ArrayList<>();
 
+        try {
+            String sqlStatement = "SELECT * FROM books WHERE borrower_id IS NOT NULL";
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                Book book = new Book();
+                book.title = (resultSet.getString("title"));
+                book.author = (resultSet.getString("author"));
+                book.price = (resultSet.getDouble("price"));
+                book.ownerId = (resultSet.getInt("owner_id"));
+                book.genre = (resultSet.getString("genre"));
+                book.borrowerId = (resultSet.getInt("borrower_id"));
+                books.add(book);
+            }
+            return books;
+        } catch (SQLException e) {
+            // e.printStackTrace();
+            System.out.println("Error while getting all borrowed books");
+        }
         return null;
 
     }
-
-
 }
