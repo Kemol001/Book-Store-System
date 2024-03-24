@@ -139,14 +139,14 @@ public class ClientHandler implements Runnable {
                     sendMessage("Enter Book Author\n"+Constants.SPACER); author = reader.readLine().toLowerCase();
                     sendMessage("Enter Book Genre (comma separated)\n"+Constants.SPACER); genre = reader.readLine().toLowerCase();
                     sendMessage("Enter Book Price\n"+Constants.SPACER); price = Double.parseDouble(reader.readLine());
-                    if(Book.addBook(connection, title,author,genre,price,userController.getUser().userid))
+                    if(Book.addBook(connection, title,author,genre,price,userController.getUser().userId))
                         sendMessage("Book Added Succesfully!\n"+Constants.SPACER,false);
                     else
                         sendMessage("Error While Adding Book\n"+Constants.SPACER,false);
                 }
                 else if(choice.equals("2")){
                     Map<String, String> user = new HashMap<>();
-                    user.put("owner_id",String.valueOf(userController.getUser().userid));
+                    user.put("owner_id",String.valueOf(userController.getUser().userId));
                     user.put("borrower_id","null");
                     ArrayList<Book> myBooks = Book.search(connection,user);
                     sendMessage("Choose The ID Of The Book You Wish To Remove\n"+Constants.SPACER,false);
@@ -155,14 +155,14 @@ public class ClientHandler implements Runnable {
                         " Price: "+book.price+"\n"+ Constants.SPACER);
                     }
                     String choice2 = reader.readLine();
-                    if(Book.delete(connection,Integer.parseInt(choice2),userController.getUser().userid))
+                    if(Book.delete(connection,Integer.parseInt(choice2),userController.getUser().userId))
                         sendMessage("Book Removed Succesfully!\n"+Constants.SPACER,false);
                     else
                         sendMessage("Error While Removing Book\n"+Constants.SPACER,false);
                 } 
             }
             else if(inputLine.equals("3")){
-                ArrayList<Request> myRequests = Request.getUserRequests(connection,"owner",userController.getUser().userid);
+                ArrayList<Request> myRequests = Request.getUserRequests(connection,"owner",userController.getUser().userId);
                 sendMessage(userController.getUser().userName+" Recieved Requests:\n"+Constants.SPACER,false);
                 for(Request request : myRequests){
                     sendMessage(request.requestId+")Book Name: "+request.bookName+" Borrower Name: "+
@@ -192,7 +192,7 @@ public class ClientHandler implements Runnable {
                 }
             }
             else if(inputLine.equals("4")){
-                ArrayList<Request> myRequests = Request.getUserRequests(connection,"borrower",userController.getUser().userid);
+                ArrayList<Request> myRequests = Request.getUserRequests(connection,"borrower",userController.getUser().userId);
                 sendMessage(userController.getUser().userName+" Submitted Requests:\n"+Constants.SPACER,false);
                 for(Request request : myRequests){
                     sendMessage(request.requestId+")Book Name: "+request.bookName+" Owner Name: "+

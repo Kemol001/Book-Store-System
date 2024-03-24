@@ -34,13 +34,13 @@ public class UserController {
 
 
     public boolean isLoggedIn() {
-        return (this.user.equals(null));
+        return (this.user.userId != 0);
     }
 
     
     public boolean logout(Connection connection) {
         try {
-            this.user = null;
+            this.user = new User();
             connection.close();
             return true;
         } catch (SQLException e) {

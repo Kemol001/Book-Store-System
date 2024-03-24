@@ -5,7 +5,7 @@ import java.sql.*;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class User implements DBObj{
-    public int userid;
+    public int userId;
     public String userName;
     public String password;
     public String userType;
@@ -57,7 +57,7 @@ public class User implements DBObj{
             preparedStatement.setString(1, userName);
             ResultSet resultSet = preparedStatement.executeQuery();
             if(resultSet.next()){
-                this.userid =  resultSet.getInt("id");
+                this.userId =  resultSet.getInt("id");
                 this.userName = resultSet.getString("username");
                 this.password = resultSet.getString("password");
                 this.userType = resultSet.getString("user_type");
