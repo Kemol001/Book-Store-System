@@ -7,7 +7,7 @@ import java.sql.*;
 import com.book.store.system.Entities.User;
 
 public class UserController {
-    private User user;
+    private User user = new User();
 
 
     public int register(Connection connection,String userName, String password, String userType) {
@@ -27,14 +27,14 @@ public class UserController {
      */
     public int login(Connection connection,String userName, String password) {
         user.getLoginInfo(connection,userName);
-        if(user.userName.equals(null)) return 404;
+        if(user.userName == null) return 404;
         if(!BCrypt.checkpw(password, user.password)) return 401;
         return 200;
     }
 
 
     public boolean isLoggedIn() {
-        return (this.user != null);
+        return (this.user.equals(null));
     }
 
     

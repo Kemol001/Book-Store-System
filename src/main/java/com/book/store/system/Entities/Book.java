@@ -12,8 +12,10 @@ public class Book implements DBObj{
     public String title;
     public String author;
     public String genre;
+    public String ownerName;
     public double price;
     public int ownerId;
+    public int bookId;
     public int borrowerId;
     
 
@@ -40,8 +42,16 @@ public class Book implements DBObj{
     }
 
 
-    public Book(){
-        
+    public boolean dummyBook(Connection connection){
+        try {
+            String sqlStatement = "INSERT INTO books (title, author, genre, price, owner_id) VALUES ('title1', 'author1', 'action,comedy', 10, 1)";
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
+            return preparedStatement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            // e.printStackTrace();
+            System.out.println("Error while inserting the book");
+        }
+        return false;
     }
 
 
@@ -140,13 +150,13 @@ public class Book implements DBObj{
     public static ArrayList<Book> search(Connection connection, Map<String,String> attributes) {
         ArrayList<Book> books = new ArrayList<>();
         try {
-            String sqlStatement = "SELECT * FROM books WHERE ";
+            String sqlStatement = "SELECT b.*, u.username as owner_name FROM books b join users u on u.id=b.owner_id WHERE ";
             for (String key : attributes.keySet()) {
-                sqlStatement += key + " like %?% And ";
+                sqlStatement += key + " like '%' || ? || '%' And ";
             }
             sqlStatement = sqlStatement.substring(0, sqlStatement.length() - 4);
             //??????????????????????????????????????????????????????????????????????????????
-            System.out.println(sqlStatement);
+            // System.out.println(sqlStatement);
 
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
             int i = 0;
@@ -162,10 +172,12 @@ public class Book implements DBObj{
                 book.ownerId = (resultSet.getInt("owner_id"));
                 book.genre = (resultSet.getString("genre"));
                 book.borrowerId = (resultSet.getInt("borrower_id"));
+                book.bookId = (resultSet.getInt("id"));
+                book.ownerName = resultSet.getString("owner_name");
                 books.add(book);
             }
         } catch (SQLException e) {
-            // e.printStackTrace();
+            e.printStackTrace();
             System.out.println("Error while searching for books");
         }
         return books;

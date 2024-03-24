@@ -16,18 +16,20 @@ public class BookStoreClient {
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             Scanner scanner = new Scanner(System.in);
 
-            String text = "";
-
             while (true) {
-
+            
+                String text="";
+                // not eom and not exit = normal message
                 while (!(text = reader.readLine()).equals(Constants.EOM) && !text.equals(Constants.EXIT)) {
                     System.out.println(text);
                 }
+
                 if (text.equals(Constants.EXIT))
                     break;
-                writer.write(scanner.nextLine());
-                writer.newLine();
+                    
+                writer.write(scanner.nextLine()+"\n");
                 writer.flush();
+
             }
 
             scanner.close();

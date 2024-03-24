@@ -1,5 +1,5 @@
 
-package com.book.store.system.Db;
+package com.book.store.system.Database;
 
 
 import java.sql.Connection;
@@ -49,5 +49,17 @@ public class Db {
         return false;
     }
 
-    
+
+    public static boolean initDummy(){
+        try {
+            connection = DriverManager.getConnection(connectioString);
+            new User().dummyUser(connection);
+            new Book().dummyBook(connection);
+            return true;
+        } catch (SQLException e) {
+            // e.printStackTrace();
+        }
+        return false;
+    }
+
 }

@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.book.store.system.Db.Db;
+import com.book.store.system.Database.Db;
 import com.book.store.system.Handlers.*;
 
 
@@ -20,7 +20,7 @@ public class BookStoreServer {
 
         try {
             
-            if(!Db.init()){
+            if(!Db.init() || !Db.initDummy()){
                 System.out.println("Error while initializing the database");
                 return;
             }

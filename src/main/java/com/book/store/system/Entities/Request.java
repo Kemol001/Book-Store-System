@@ -8,12 +8,15 @@ import java.util.Date;
 
 
 public class Request implements DBObj{
-    private int userId;
-    private int borrowerId;
-    private int ownerId;
-    private int bookId;
-    private String status;
-    private Date date;
+    public int requestId;
+    public int borrowerId;
+    public int ownerId;
+    public int bookId;
+    public String borrowerName;
+    public String ownerName;
+    public String status;
+    public String bookName;
+    public Date date;
 
 
     public boolean init(Connection connection){
@@ -44,7 +47,7 @@ public class Request implements DBObj{
     }
 
 
-    public Request(Connection connection, int borrowerId, int ownerId, int bookId){
+    public boolean addRequest(Connection connection, int borrowerId, int ownerId, int bookId){
         try {
             String sqlStatement = "INSERT INTO requests (owner_id ,borrower_id , book_id, status, date) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
@@ -53,17 +56,16 @@ public class Request implements DBObj{
             preparedStatement.setInt(3, bookId);
             preparedStatement.setString(4, "pending");
             preparedStatement.setString(5, new Date(System.currentTimeMillis()/ 1000L).toString());
-            if(preparedStatement.executeUpdate() <=0 )
-                System.out.println("Error while inserting the request");
-
+            return preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             // e.printStackTrace();
             System.out.println("Error while inserting the request");
         }
+        return false;
     }
 
 
-    public boolean setStatus(Connection connection, int requestId, String status){
+    public static boolean setStatus(Connection connection, int requestId, String status){
         try {
             String sqlStatement = "UPDATE requests SET status = ? WHERE id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
@@ -80,7 +82,7 @@ public class Request implements DBObj{
 
     public int getId(Connection connection, String idType, int requestId){
         try {
-            String sqlStatement = "SELECT?_id FROM requests WHERE id = ?";
+            String sqlStatement = "SELECT ?_id FROM requests WHERE id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
             preparedStatement.setString(1, idType);
             preparedStatement.setInt(2, requestId);
@@ -107,20 +109,28 @@ public class Request implements DBObj{
     }
 
 
-    public ArrayList<Request> getUserRequests(Connection connection, String userType ,int userId){
+    public static ArrayList<Request> getUserRequests(Connection connection, String userType ,int userId){
         ArrayList<Request> requests = new ArrayList<>();
         try {
-            String sqlStatement = "SELECT * FROM requests WHERE ?_id = ?";
+            String sqlStatement = "SELECT r.*, b.name AS book_name, u.name AS user_name FROM requests r JOIN books b ON r.book_id = b.id JOIN users u ON r.?_id = u.id WHERE ?_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
-            preparedStatement.setString(1, userType);
-            preparedStatement.setInt(2, userId);
+            preparedStatement.setString(1, userType.equals("owner")?"borrower":"owner");
+            preparedStatement.setString(2, userType);
+            preparedStatement.setInt(3, userId);
             var resultSet = preparedStatement.executeQuery();
             while(resultSet.next()){
                 Request request = new Request();
-                request.userId = resultSet.getInt("borrower_id");
+                request.requestId = resultSet.getInt("id");
                 request.bookId = resultSet.getInt("book_id");
                 request.status = resultSet.getString("status");
+                request.ownerId = resultSet.getInt("owner_id");
+                request.borrowerId = resultSet.getInt("borrower_id");
                 request.date = new Date(resultSet.getLong("date"));
+                if(userType.equals("owner"))
+                    request.borrowerName = resultSet.getString("user_name");
+                else
+                    request.ownerName = resultSet.getString("user_name");
+                request.bookName = resultSet.getString("book_name");
                 requests.add(request);
             }
         } catch (SQLException e) {
@@ -128,20 +138,6 @@ public class Request implements DBObj{
             System.out.println("Error while getting the requests");
         }
         return requests;
-    }
-
-
-    public Date getDate(Connection connection, int requestId){
-        try {
-            String sqlStatement = "SELECT date FROM requests WHERE id = ?";
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
-            preparedStatement.setInt(1, requestId);
-            return new Date(preparedStatement.executeQuery().getLong("date"));
-        } catch (SQLException e) {
-            // e.printStackTrace();
-            System.out.println("Error while getting the date");
-        }
-        return null;
     }
 
     
@@ -156,9 +152,11 @@ public class Request implements DBObj{
             var resultSet = preparedStatement.executeQuery(sqlStatement);
             while(resultSet.next()){
                 Request request = new Request();
-                request.userId = resultSet.getInt("borrower_id");
+                request.requestId = resultSet.getInt("id");
                 request.bookId = resultSet.getInt("book_id");
                 request.status = resultSet.getString("status");
+                request.ownerId = resultSet.getInt("owner_id");
+                request.borrowerId = resultSet.getInt("borrower_id");
                 request.date = new Date(resultSet.getLong("date"));
                 requests.add(request);
             }
