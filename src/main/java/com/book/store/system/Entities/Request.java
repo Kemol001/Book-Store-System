@@ -15,8 +15,8 @@ public class Request implements DBObj{
     public String borrowerName;
     public String ownerName;
     public String status;
-    public String bookName;
-    public Date date;
+    public String bookTitle;
+    public String date;
 
 
     public boolean init(Connection connection){
@@ -47,7 +47,7 @@ public class Request implements DBObj{
     }
 
 
-    public boolean addRequest(Connection connection, int borrowerId, int ownerId, int bookId){
+    public static boolean addRequest(Connection connection, int borrowerId, int ownerId, int bookId){
         try {
             String sqlStatement = "INSERT INTO requests (owner_id ,borrower_id , book_id, status, date) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
@@ -55,7 +55,7 @@ public class Request implements DBObj{
             preparedStatement.setInt(2, borrowerId);
             preparedStatement.setInt(3, bookId);
             preparedStatement.setString(4, "pending");
-            preparedStatement.setString(5, new Date(System.currentTimeMillis()/ 1000L).toString());
+            preparedStatement.setString(5, new Date(System.currentTimeMillis()).toString());
             return preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             // e.printStackTrace();
@@ -112,11 +112,9 @@ public class Request implements DBObj{
     public static ArrayList<Request> getUserRequests(Connection connection, String userType ,int userId){
         ArrayList<Request> requests = new ArrayList<>();
         try {
-            String sqlStatement = "SELECT r.*, b.name AS book_name, u.name AS user_name FROM requests r JOIN books b ON r.book_id = b.id JOIN users u ON r.?_id = u.id WHERE ?_id = ?";
+            String sqlStatement = "SELECT r.*, b.title AS book_title, u.username AS user_name FROM requests r JOIN books b ON r.book_id = b.id JOIN users u ON r."+(userType.equals("owner")?"borrower":"owner")+"_id = u.id WHERE r."+userType+"_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
-            preparedStatement.setString(1, userType.equals("owner")?"borrower":"owner");
-            preparedStatement.setString(2, userType);
-            preparedStatement.setInt(3, userId);
+            preparedStatement.setInt(1, userId);
             var resultSet = preparedStatement.executeQuery();
             while(resultSet.next()){
                 Request request = new Request();
@@ -125,31 +123,31 @@ public class Request implements DBObj{
                 request.status = resultSet.getString("status");
                 request.ownerId = resultSet.getInt("owner_id");
                 request.borrowerId = resultSet.getInt("borrower_id");
-                request.date = new Date(resultSet.getLong("date"));
+                request.date = resultSet.getString("date");
                 if(userType.equals("owner"))
                     request.borrowerName = resultSet.getString("user_name");
                 else
                     request.ownerName = resultSet.getString("user_name");
-                request.bookName = resultSet.getString("book_name");
+                request.bookTitle = resultSet.getString("book_title");
                 requests.add(request);
             }
         } catch (SQLException e) {
-            // e.printStackTrace();
+            e.printStackTrace();
             System.out.println("Error while getting the requests");
         }
         return requests;
     }
 
     
-    public ArrayList<Request> getAllRequests(Connection connection, String status){
+    public static ArrayList<Request> getAllRequests(Connection connection, String status){
         ArrayList<Request> requests = new ArrayList<>();
         try {
             if(status.equals("all"))
                 status = ".*";
-            String sqlStatement = "SELECT * FROM requests where status like ?";
+            String sqlStatement = "SELECT r.*, b.title AS book_title, u.username AS borrower_name, u2.username AS owner_name FROM requests r JOIN books b ON r.book_id = b.id JOIN users u ON r.borrower_id = u.id JOIN users u2 ON r.owner_id = u2.id WHERE r.status LIKE '%' || ? || '%'";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
             preparedStatement.setString(1, status);
-            var resultSet = preparedStatement.executeQuery(sqlStatement);
+            var resultSet = preparedStatement.executeQuery();
             while(resultSet.next()){
                 Request request = new Request();
                 request.requestId = resultSet.getInt("id");
@@ -157,12 +155,15 @@ public class Request implements DBObj{
                 request.status = resultSet.getString("status");
                 request.ownerId = resultSet.getInt("owner_id");
                 request.borrowerId = resultSet.getInt("borrower_id");
-                request.date = new Date(resultSet.getLong("date"));
+                request.borrowerName = resultSet.getString("borrower_name");
+                request.ownerName = resultSet.getString("owner_name");
+                request.bookTitle = resultSet.getString("book_title");
+                request.date = resultSet.getString("date");
                 requests.add(request);
             }
             return requests;
         } catch (SQLException e) {
-            // e.printStackTrace();
+            e.printStackTrace();
             System.out.println("Error while getting the requests");
         }
         return null;

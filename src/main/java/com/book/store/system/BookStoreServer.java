@@ -17,10 +17,15 @@ public class BookStoreServer {
     
     public static void main(String[] args) throws Exception {
         ServerSocket serverSocket = null;
+        boolean dummyData = true;
 
         try {
-            
-            if(!Db.init() || !Db.initDummy()){
+
+            if(dummyData){
+                Db.initDummy();
+            }
+
+            if(!Db.init()){
                 System.out.println("Error while initializing the database");
                 return;
             }

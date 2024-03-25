@@ -19,7 +19,7 @@ public class BookStoreClient {
             while (true) {
             
                 String text="";
-               // not eom and not exit = normal message
+                // not eom and not exit = normal message
                 while (!(text = reader.readLine()).equals(Constants.EOM) && !text.equals(Constants.EXIT)) {
                     System.out.println(text);
                 }

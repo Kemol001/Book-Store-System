@@ -38,12 +38,12 @@ public class UserController {
     }
 
     
-    public boolean logout(Connection connection) {
+    public boolean logout() {
         try {
             this.user = new User();
-            connection.close();
+            // connection.close();
             return true;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             // e.printStackTrace();
             System.out.println("Error while closing the connection");
         }

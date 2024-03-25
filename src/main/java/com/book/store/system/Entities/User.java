@@ -30,8 +30,24 @@ public class User implements DBObj{
 
 
     public boolean dummyUser(Connection connection){
+        clearUsers(connection);
         String hashedPassword = BCrypt.hashpw("test", BCrypt.gensalt());
-        return createUser(connection, "test", hashedPassword, "user");
+        String hashedPassword2 = BCrypt.hashpw("admin", BCrypt.gensalt());
+        String hashedPassword3 = BCrypt.hashpw("test1", BCrypt.gensalt());
+        createUser(connection, "test", hashedPassword, "user");
+        createUser(connection, "admin", hashedPassword2, "admin");
+        createUser(connection, "test1", hashedPassword3, "user");
+        return true;
+    }
+
+
+    public void clearUsers(Connection connection){
+        try{
+            String sqlStatement = "DELETE FROM users";
+            connection.createStatement().executeUpdate(sqlStatement);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
 

@@ -13,6 +13,7 @@ public class Book implements DBObj{
     public String author;
     public String genre;
     public String ownerName;
+    public String borrowerName;
     public double price;
     public int ownerId;
     public int bookId;
@@ -44,14 +45,30 @@ public class Book implements DBObj{
 
     public boolean dummyBook(Connection connection){
         try {
-            String sqlStatement = "INSERT INTO books (title, author, genre, price, owner_id) VALUES ('title1', 'author1', 'action,comedy', 10, 1)";
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
-            return preparedStatement.executeUpdate() > 0;
-        } catch (SQLException e) {
+            clearBooks(connection);
+            addBook(connection, "The Great Gatsby".toLowerCase(), "F. Scott Fitzgerald".toLowerCase(), "Novel", 10, 1);
+            addBook(connection, "To Kill a Mockingbird".toLowerCase(), "Harper Lee".toLowerCase(), "Novel", 15, 1);
+            addBook(connection, "1984", "George Orwell".toLowerCase(), "Novel", 20, 1);
+            addBook(connection, "Pride and Prejudice".toLowerCase(), "Jane Austen", "Novel", 25, 1);
+            borrow(connection, 1, 3);
+            borrow(connection, 2, 3);
+        } catch (Exception e) {
             // e.printStackTrace();
             System.out.println("Error while inserting the book");
         }
         return false;
+    }
+
+
+    public void clearBooks(Connection connection){
+        try {
+            String sqlStatement = "DELETE FROM books";
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            // e.printStackTrace();
+            System.out.println("Error while deleting the books");
+        }
     }
 
 
@@ -150,9 +167,17 @@ public class Book implements DBObj{
     public static ArrayList<Book> search(Connection connection, Map<String,String> attributes) {
         ArrayList<Book> books = new ArrayList<>();
         try {
-            String sqlStatement = "SELECT b.*, u.username as owner_name FROM books b join users u on u.id=b.owner_id WHERE ";
+            String sqlStatement = "SELECT b.*, u.username as owner_name, u2.username as borrower_name FROM books b join users u on u.id=b.owner_id left join users u2 on u2.id=b.borrower_id WHERE ";
             for (String key : attributes.keySet()) {
-                sqlStatement += key + " like '%' || ? || '%' And ";
+                if(attributes.get(key).contains("null"))
+                sqlStatement += key + " is "+ attributes.get(key) +" And ";
+                else if(key.equals("owner_id") || key.equals("borrower_id") || key.equals("id"))
+                    sqlStatement += key + " = ? And ";
+                else if(key.equals("price")){
+                    sqlStatement += key + attributes.get(key);
+                }
+                else
+                    sqlStatement += key + " like '%' || ? || '%' And ";
             }
             sqlStatement = sqlStatement.substring(0, sqlStatement.length() - 4);
             //??????????????????????????????????????????????????????????????????????????????
@@ -161,6 +186,8 @@ public class Book implements DBObj{
             PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
             int i = 0;
             for (String value : attributes.values()) {
+                if(value.contains("null") || value.equals("price"))
+                    continue;
                 preparedStatement.setString(++i, value);
             }
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -174,6 +201,7 @@ public class Book implements DBObj{
                 book.borrowerId = (resultSet.getInt("borrower_id"));
                 book.bookId = (resultSet.getInt("id"));
                 book.ownerName = resultSet.getString("owner_name");
+                book.borrowerName = resultSet.getString("borrower_name");
                 books.add(book);
             }
         } catch (SQLException e) {
