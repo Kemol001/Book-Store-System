@@ -21,7 +21,7 @@ public class Db {
 
 
     public static Connection connect(){
-        // if(connection == null){
+        if(connection == null){
             try {
                 return DriverManager.getConnection(connectioString);
             } catch (SQLException e) {
@@ -29,8 +29,8 @@ public class Db {
                 // e.printStackTrace();
                 return null;
             }
-        // }
-        // return connection;
+        }
+        return connection;
     }
 
 

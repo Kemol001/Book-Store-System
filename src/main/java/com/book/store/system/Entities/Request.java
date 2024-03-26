@@ -80,35 +80,6 @@ public class Request implements DBObj{
     }
 
 
-    public int getId(Connection connection, String idType, int requestId){
-        try {
-            String sqlStatement = "SELECT ?_id FROM requests WHERE id = ?";
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
-            preparedStatement.setString(1, idType);
-            preparedStatement.setInt(2, requestId);
-            return preparedStatement.executeQuery().getInt(idType+"_id");
-        } catch (SQLException e) {
-            // e.printStackTrace();
-            System.out.println("Error while getting the user id");
-        }
-        return -1;
-    }
-    
-
-    public String getStatus(Connection connection, int requestId){
-        try {
-            String sqlStatement = "SELECT status FROM requests WHERE id = ?";
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
-            preparedStatement.setInt(1, requestId);
-            return preparedStatement.executeQuery().getString("status");
-        } catch (SQLException e) {
-            // e.printStackTrace();
-            System.out.println("Error while getting the status");
-        }
-        return null;
-    }
-
-
     public static ArrayList<Request> getUserRequests(Connection connection, String userType ,int userId){
         ArrayList<Request> requests = new ArrayList<>();
         try {
@@ -168,5 +139,62 @@ public class Request implements DBObj{
         }
         return null;
     }
-    
+
+
+    public static Request getRequest(Connection connection, int requestId){
+        try {
+            String sqlStatement = "SELECT r.*, b.title AS book_title, u.username AS borrower_name, u2.username AS owner_name FROM requests r JOIN books b ON r.book_id = b.id JOIN users u ON r.borrower_id = u.id JOIN users u2 ON r.owner_id = u2.id WHERE r.id = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
+            preparedStatement.setInt(1, requestId);
+            var resultSet = preparedStatement.executeQuery();
+            if(resultSet.next()){
+                Request request = new Request();
+                request.requestId = resultSet.getInt("id");
+                request.bookId = resultSet.getInt("book_id");
+                request.status = resultSet.getString("status");
+                request.ownerId = resultSet.getInt("owner_id");
+                request.borrowerId = resultSet.getInt("borrower_id");
+                request.borrowerName = resultSet.getString("borrower_name");
+                request.ownerName = resultSet.getString("owner_name");
+                request.bookTitle = resultSet.getString("book_title");
+                request.date = resultSet.getString("date");
+                return request;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error while getting the request");
+        }
+        return null;
+    }
+
+
+    public static ArrayList<Request> getAcceptedRequests(Connection connection, int userId){
+        ArrayList<Request> requests = new ArrayList<>();
+        try {
+            String sqlStatement = "SELECT r.*, b.title AS book_title, u.username AS borrower_name, u2.username AS owner_name FROM requests r JOIN books b ON r.book_id = b.id JOIN users u ON r.borrower_id = u.id JOIN users u2 ON r.owner_id = u2.id WHERE r.status = 'accept' AND (r.borrower_id = ? OR r.owner_id = ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement);
+            preparedStatement.setInt(1, userId);
+            preparedStatement.setInt(2, userId);
+            var resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                Request request = new Request();
+                request.requestId = resultSet.getInt("id");
+                request.bookId = resultSet.getInt("book_id");
+                request.status = resultSet.getString("status");
+                request.ownerId = resultSet.getInt("owner_id");
+                request.borrowerId = resultSet.getInt("borrower_id");
+                request.borrowerName = resultSet.getString("borrower_name");
+                request.ownerName = resultSet.getString("owner_name");
+                request.bookTitle = resultSet.getString("book_title");
+                request.date = resultSet.getString("date");
+                requests.add(request);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error while getting the requests");
+        }
+        return requests;
+    }
+
+
 }

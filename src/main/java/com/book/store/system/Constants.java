@@ -4,6 +4,7 @@ public class Constants {
     public static String EOM = "eom";
     public static String EXIT = "exit";
     public static String WAIT = "wait";
+    public static String CONTINUE = ".";
     public static int WRONG_PASSWORD = 401;
     public static int USER_NOT_FOUND = 404;
     public static int SUCCESS = 200;

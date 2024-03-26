@@ -1,14 +1,21 @@
 package com.book.store.system.Handlers;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import com.book.store.system.Constants;
 import com.book.store.system.Entities.*;
 
 public class UserHandler implements Handler{
-    private ClientHandler clientHandler;
+    private final ClientHandler clientHandler;
 
     public UserHandler(ClientHandler clientHandler){
         this.clientHandler = clientHandler;
@@ -92,30 +99,34 @@ public class UserHandler implements Handler{
     public void reviewRequests() throws Exception{
         ArrayList<Request> myRequests = Request.getUserRequests(clientHandler.connection,"owner",clientHandler.userController.getUser().userId);
         clientHandler.sendMessage(clientHandler.userController.getUser().userName+" Recieved Requests:\n"+Constants.SPACER,false);
+        int i=0;
         for(Request request : myRequests){
-            clientHandler.sendMessage(request.requestId+")Book Name: "+request.bookTitle+" Borrower Name: "+
-            request.borrowerName+"\n"+ Constants.SPACER,false);
+            clientHandler.sendMessage((++i)+"- Book Name: "+request.bookTitle+" Borrower Name: "+
+            request.borrowerName,false);
         }
-        clientHandler.sendMessage("Type Request ID (Accept/Reject) Or Exit constants\n"+Constants.SPACER);
-        String input = clientHandler.reader.readLine();
-        if(!(input.equals(Constants.EXIT))){
+        clientHandler.sendMessage("Type Request ID (Accept/Reject) Or Exit\n"+Constants.SPACER);
+        String input = "";
+        while(!(input = clientHandler.reader.readLine()).equals(Constants.EXIT)){
             String parts [] = input.split("\\s+",2);
             if(parts.length == 2){
-                int requestID = Integer.parseInt(parts[0].trim());
+                int requestID = Integer.parseInt(parts[0].trim())-1;
                 String status = (parts[1].trim());
-                if(status == "Accept" && Request.setStatus(clientHandler.connection,requestID,status)){
-                    clientHandler.sendMessage("Request Accepted Succesfully!\n"+Constants.SPACER,false);
-                    //TODO :Implement messaging logic
+                if(requestID < 0 || requestID > myRequests.size()){
+                    clientHandler.sendMessage("Invalid Request ID\n"+Constants.SPACER);
                 }
-                else if(status == "Reject" && Request.setStatus(clientHandler.connection,requestID,status)){
-                    clientHandler.sendMessage("Request Rejected Succesfully!\n"+Constants.SPACER,false);
+                else if(status.toLowerCase().equals("accept") && Request.setStatus(clientHandler.connection,myRequests.get(requestID).requestId,status)){
+                    clientHandler.sendMessage("Request Accepted Succesfully!\n"+Constants.SPACER);
+                    openChat(myRequests.get(requestID).requestId,"owner");
+                }
+                else if(status.toLowerCase().equals("reject")  && Request.setStatus(clientHandler.connection,myRequests.get(requestID).requestId,status)){
+                    clientHandler.sendMessage("Request Rejected Succesfully!\n"+Constants.SPACER);
                 }
                 else{
-                    clientHandler.sendMessage("Error While Processing Request\n"+Constants.SPACER,false);
+                    clientHandler.sendMessage("Invalid Input\n"+Constants.SPACER);
                 }
             }
             else{
-                clientHandler.sendMessage("Invalid Input Format\n"+Constants.SPACER,false); 
+                clientHandler.sendMessage("Invalid Input Format\n"+Constants.SPACER); 
             }
         }
     }
@@ -132,11 +143,109 @@ public class UserHandler implements Handler{
     }
 
 
+    synchronized public void openChat(int requestId,String userType) throws Exception{
+        ArrayList<Message> messages = Message.getMessages(clientHandler.connection,requestId,0);
+        String name; 
+        if(messages.size() == 0){
+            clientHandler.sendMessage("No Messages Yet\n"+Constants.SPACER);
+            name = userType.equals("owner")?Request.getRequest(clientHandler.connection,requestId).borrowerName:Request.getRequest(clientHandler.connection,requestId).ownerName;
+        }else{
+            name = userType.equals("owner")?messages.get(0).borrowerName:messages.get(0).ownerName;
+        }
+        clientHandler.sendMessage("Chatting With "+ name +"\n"+"Type Your Message or Exit\n"+Constants.SPACER,false);
+        for(Message message : messages){
+            clientHandler.sendMessage((message.senderType.equals(userType)?"me":name)+": "+message.message+" Date: "+message.date,false);
+        }
+        
+        while(true){
+            try {
+                ArrayList<Message> newMessages = Message.getMessages(clientHandler.connection,requestId,messages.get(messages.size()-1).messageId);
+                if(newMessages.size() > 0){
+                    messages = newMessages;
+                    name = userType.equals("owner")?messages.get(0).borrowerName:messages.get(0).ownerName;
+                    for(Message message : messages){
+                        if(!message.senderType.equals(userType))
+                            clientHandler.sendMessage(name+": "+message.message+" Date: "+message.date,false);
+                    }
+                }
+
+                clientHandler.sendMessage("");
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                // Future<String> future = executor.submit(new InputReaderTask(clientHandler.reader));
+                String input = clientHandler.reader.readLine() ;
+                // try {
+                //     input = future.get(5, TimeUnit.SECONDS); // Timeout set to 5 seconds
+                // } catch (Exception e) {
+                    
+                // }
+
+                if(input.equals("."))
+                    continue;
+
+                if(input.toLowerCase().equals(Constants.EXIT)){
+                    executor.shutdownNow();
+                    return;
+                } 
+
+                if(!Message.addMessage(clientHandler.connection,requestId,input,userType)){
+                    clientHandler.sendMessage("Error While Sending Message\n"+Constants.SPACER);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+    }
+
+
+    static class InputReaderTask implements Callable<String> {
+        private BufferedReader reader;
+
+        public InputReaderTask(BufferedReader reader) {
+            this.reader = reader;
+        }
+
+        @Override
+        public String call() throws IOException {
+            return reader.readLine();
+        }
+    }
+
+
+    public void getChatList() throws Exception{
+        while(true){
+            clientHandler.sendMessage("Chat List\n"+Constants.SPACER,false);
+            ArrayList<Request> myRequests = Request.getAcceptedRequests(clientHandler.connection,clientHandler.userController.getUser().userId);
+            
+            int i=1;
+            for(Request request : myRequests){
+                clientHandler.sendMessage("Chat ID: "+(i++)+" Book Name: "+request.bookTitle+" Owner Name: "+
+                request.ownerName+" Borrower Name: "+request.borrowerName,false);
+            }
+            clientHandler.sendMessage("Type request Id or Exit\n"+Constants.SPACER);
+            String input = (clientHandler.reader.readLine());
+    
+            if(input.equals(Constants.EXIT)) break;
+            int chatId = Integer.parseInt(input)-1;
+            if(!(chatId < 0 || chatId > myRequests.size())){
+                openChat(myRequests.get(chatId).requestId, clientHandler.userController.getUser().userId == myRequests.get(chatId).ownerId?"owner":"borrower");
+                clientHandler.sendMessage("Chat closed\n"+Constants.SPACER,false);
+            }else{
+                clientHandler.sendMessage("Invalid Chat ID\n"+Constants.SPACER,false);
+            }
+        }
+        // openChat(2, "owner");
+        // Request.getUserRequests(null, null, 0);
+        // Message.getMessages(clientHandler.connection, 2,0);
+    }
+
+
     public void start() throws Exception{
         clientHandler.sendMessage("Choose an Action\n" + Constants.SPACER, false);
         while (true) {
             clientHandler.sendMessage("1- Browse And Search Books \n2- Add Or Remove Books\n" +
-            "3- Review Requests\n4- View Request History\n5- Logout\n"+ Constants.SPACER);
+            "3- Review Requests\n4- View Request History\n5- Messaging\n6- Logout\n"+ Constants.SPACER);
             String inputLine = clientHandler.reader.readLine();
             if (inputLine.equals("1")) {
                 searchBooks();
@@ -158,6 +267,9 @@ public class UserHandler implements Handler{
                 getRequestsHistory();
             }
             else if(inputLine.equals("5")){
+                getChatList();
+            }
+            else if(inputLine.equals("6")){
                 clientHandler.sendMessage("See You soon!\n"+Constants.SPACER,false);
                 clientHandler.userController.logout();
                 break;
