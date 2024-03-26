@@ -6,17 +6,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import com.book.store.system.Constants;
 import com.book.store.system.Entities.*;
 
 public class UserHandler implements Handler{
     private final ClientHandler clientHandler;
-
+    // private volatile boolean threadActive = true;
     public UserHandler(ClientHandler clientHandler){
         this.clientHandler = clientHandler;
     }
@@ -144,6 +140,7 @@ public class UserHandler implements Handler{
 
 
     synchronized public void openChat(int requestId,String userType) throws Exception{
+        // threadActive = true;
         ArrayList<Message> messages = Message.getMessages(clientHandler.connection,requestId,0);
         String name; 
         if(messages.size() == 0){
@@ -157,45 +154,131 @@ public class UserHandler implements Handler{
             clientHandler.sendMessage((message.senderType.equals(userType)?"me":name)+": "+message.message+" Date: "+message.date,false);
         }
         
-        while(true){
-            try {
-                ArrayList<Message> newMessages = Message.getMessages(clientHandler.connection,requestId,messages.get(messages.size()-1).messageId);
-                if(newMessages.size() > 0){
-                    messages = newMessages;
-                    name = userType.equals("owner")?messages.get(0).borrowerName:messages.get(0).ownerName;
+        // while(true){
+        //     try {
+        //         ArrayList<Message> newMessages = Message.getMessages(clientHandler.connection,requestId,messages.get(messages.size()-1).messageId);
+        //         if(newMessages.size() > 0){
+        //             messages = newMessages;
+        //             name = userType.equals("owner")?messages.get(0).borrowerName:messages.get(0).ownerName;
+        //             for(Message message : messages){
+        //                 if(!message.senderType.equals(userType))
+        //                     clientHandler.sendMessage(name+": "+message.message+" Date: "+message.date,false);
+        //             }
+        //         }
+
+        //         clientHandler.sendMessage("");
+        //         String input = "";
+        //         // ExecutorService executor = Executors.newSingleThreadExecutor();
+        //         // Future<String> future = executor.submit(new InputReaderTask(clientHandler.reader));
+        //         // try {
+        //         //     input = future.get(5, TimeUnit.SECONDS); // Timeout set to 5 seconds
+        //         // } catch (Exception e) {
+                    
+        //         // }
+
+        //         input = clientHandler.reader.readLine() ;
+
+        //         if(input.equals("."))
+        //             continue;
+
+        //         if(input.toLowerCase().equals(Constants.EXIT)){
+        //             // executor.shutdownNow();
+        //             return;
+        //         } 
+
+        //         if(!Message.addMessage(clientHandler.connection,requestId,input,userType)){
+        //             clientHandler.sendMessage("Error While Sending Message\n"+Constants.SPACER);
+        //         }
+
+        //     } catch (Exception e) {
+        //         e.printStackTrace();
+        //         return;
+        //     }
+        // }
+
+
+        try{
+            
+            Thread thread1 = new Thread(new Runnable()  {
+                @Override
+                public void run() {
+                    ArrayList<Message> messages = Message.getMessages(clientHandler.connection,requestId,0);
+                    String name; 
+                    if(messages.size() == 0){
+                        clientHandler.sendMessage("No Messages Yet\n"+Constants.SPACER);
+                        name = userType.equals("owner")?Request.getRequest(clientHandler.connection,requestId).borrowerName:Request.getRequest(clientHandler.connection,requestId).ownerName;
+                    }else{
+                        name = userType.equals("owner")?messages.get(0).borrowerName:messages.get(0).ownerName;
+                    }
+                    clientHandler.sendMessage("Chatting With "+ name +"\n"+"Type Your Message or Exit\n"+Constants.SPACER,false);
                     for(Message message : messages){
-                        if(!message.senderType.equals(userType))
-                            clientHandler.sendMessage(name+": "+message.message+" Date: "+message.date,false);
+                        clientHandler.sendMessage((message.senderType.equals(userType)?"me":name)+": "+message.message+" Date: "+message.date,false);
+                    }
+                    while(true){
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        if(messages.size()==0) ;
+                        ArrayList<Message> newMessages = Message.getMessages(clientHandler.connection,requestId,(messages.size()==0 ? 0 :messages.get(messages.size()-1).messageId));
+                        if(newMessages.size() > 0){
+                            messages = newMessages;
+                            name = userType.equals("owner")?messages.get(0).borrowerName:messages.get(0).ownerName;
+                            for(Message message : messages){
+                                if(!message.senderType.equals(userType))
+                                    clientHandler.sendMessage(name+": "+message.message+" Date: "+message.date,false);
+                            }
+                        }
+                    }
+                    
+                }
+            });  
+
+            Thread thread2 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while(true){
+                        clientHandler.sendMessage("");
+                        String input = "";
+                        try {
+                            input = clientHandler.reader.readLine() ;
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        if(input.toLowerCase().equals(Constants.EXIT)){
+                            Thread.currentThread().interrupt();
+                            // threadActive = false;
+                            return;
+                        } 
+
+                        if(!Message.addMessage(clientHandler.connection,requestId,input,userType)){
+                            clientHandler.sendMessage("Error While Sending Message\n"+Constants.SPACER);
+                        }
                     }
                 }
+            });  
+            
 
-                clientHandler.sendMessage("");
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                // Future<String> future = executor.submit(new InputReaderTask(clientHandler.reader));
-                String input = clientHandler.reader.readLine() ;
-                // try {
-                //     input = future.get(5, TimeUnit.SECONDS); // Timeout set to 5 seconds
-                // } catch (Exception e) {
-                    
-                // }
+            // Starting both threads
+            thread1.start();
+            thread2.start();
 
-                if(input.equals("."))
-                    continue;
+            thread2.join();
+            // Waiting for both threads to finish
+            // while(threadActive){
+            //     Thread.sleep(1000);
+            // }
 
-                if(input.toLowerCase().equals(Constants.EXIT)){
-                    executor.shutdownNow();
-                    return;
-                } 
-
-                if(!Message.addMessage(clientHandler.connection,requestId,input,userType)){
-                    clientHandler.sendMessage("Error While Sending Message\n"+Constants.SPACER);
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
+            thread1.stop();
+            thread2.stop();
+            
+        }catch(Exception e){
+            e.printStackTrace();
         }
+
+
     }
 
 
