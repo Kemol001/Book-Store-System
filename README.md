@@ -14,3 +14,4 @@ make sure to run
 ```
 mvn clean install
 ```
+run bookstore server first then run ay number of client instances

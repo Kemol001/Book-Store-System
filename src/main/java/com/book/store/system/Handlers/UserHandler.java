@@ -17,6 +17,13 @@ public class UserHandler implements Handler{
         this.clientHandler = clientHandler;
     }
 
+    public static boolean isNumeric(String str) {
+        return str.matches("\\d+");
+    }
+    public static boolean isDouble(String str) {
+        return str.matches("\\d+(\\.\\d+)?");
+    }
+
     public void removeBook() throws Exception{
         Map<String, String> arguments = new HashMap<>();
         arguments.put("owner_id",String.valueOf(clientHandler.userController.getUser().userId));
@@ -30,7 +37,7 @@ public class UserHandler implements Handler{
         clientHandler.sendMessage("");
         String choice = clientHandler.reader.readLine();
         if(choice.equals(Constants.EXIT)) return;
-        else if(Book.delete(clientHandler.connection,Integer.parseInt(choice),clientHandler.userController.getUser().userId))
+        else if(isNumeric(choice) && Book.delete(clientHandler.connection,Integer.parseInt(choice),clientHandler.userController.getUser().userId))
             clientHandler.sendMessage("Book Removed Succesfully!\n"+Constants.SPACER,false);
         else
             clientHandler.sendMessage("Error While Removing Book\n"+Constants.SPACER,false);
@@ -38,12 +45,12 @@ public class UserHandler implements Handler{
 
 
     public void addBook() throws Exception{
-        String title,author,genre;
+        String title,author,genre,temp;
         double price;
         clientHandler.sendMessage("Enter Book Title:"); title = clientHandler.reader.readLine().toLowerCase();
         clientHandler.sendMessage("Enter Book Author:"); author = clientHandler.reader.readLine().toLowerCase();
         clientHandler.sendMessage("Enter Book Genre (comma separated):"); genre = clientHandler.reader.readLine().toLowerCase();
-        clientHandler.sendMessage("Enter Book Price:"); price = Double.parseDouble(clientHandler.reader.readLine());
+        clientHandler.sendMessage("Enter Book Price (defaults to 0 if invalid):"); price = isDouble(temp = clientHandler.reader.readLine() ) ? Double.parseDouble(temp) : 0;
         if(Book.addBook(clientHandler.connection, title,author,genre,price,clientHandler.userController.getUser().userId))
             clientHandler.sendMessage("Book Added Succesfully!\n"+Constants.SPACER,false);
         else
@@ -76,6 +83,7 @@ public class UserHandler implements Handler{
         }
         clientHandler.sendMessage(Constants.SPACER+"\nChoose The ID Of The Book You Want To Request or exit");
         while(!(line = clientHandler.reader.readLine().toLowerCase()).equals(Constants.EXIT)){
+            if(!isNumeric(line)) continue;
             int bookId = Integer.parseInt(line)-1;
             if(bookId < 0 || bookId > books.size()){
                 clientHandler.sendMessage("Invalid Book ID\n"+Constants.SPACER);
@@ -105,6 +113,10 @@ public class UserHandler implements Handler{
         while(!(input = clientHandler.reader.readLine()).equals(Constants.EXIT)){
             String parts [] = input.split("\\s+",2);
             if(parts.length == 2){
+                if(!isNumeric(parts[0])){
+                    clientHandler.sendMessage("Invalid Request ID\n"+Constants.SPACER);
+                    continue;
+                }
                 int requestID = Integer.parseInt(parts[0].trim())-1;
                 String status = (parts[1].trim());
                 if(requestID < 0 || requestID > myRequests.size()){
@@ -310,6 +322,10 @@ public class UserHandler implements Handler{
             String input = (clientHandler.reader.readLine());
     
             if(input.equals(Constants.EXIT)) break;
+            if(!isNumeric(input)){
+                clientHandler.sendMessage("Invalid Chat ID\n"+Constants.SPACER,false);
+                continue;
+            }
             int chatId = Integer.parseInt(input)-1;
             if(!(chatId < 0 || chatId > myRequests.size())){
                 openChat(myRequests.get(chatId).requestId, clientHandler.userController.getUser().userId == myRequests.get(chatId).ownerId?"owner":"borrower");

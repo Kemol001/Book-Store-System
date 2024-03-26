@@ -17,7 +17,7 @@ public class BookStoreServer {
     
     public static void main(String[] args) throws Exception {
         ServerSocket serverSocket = null;
-        boolean dummyData = true;
+        boolean dummyData = false;
 
         try {
 
