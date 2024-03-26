@@ -3,8 +3,10 @@ package com.book.store.system.Handlers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.book.store.system.Constants;
+import com.book.store.system.Controllers.MessageController;
 import com.book.store.system.Entities.*;
 
 public class UserHandler implements Handler{
@@ -13,6 +15,20 @@ public class UserHandler implements Handler{
     public UserHandler(ClientHandler clientHandler){
         this.clientHandler = clientHandler;
     }
+
+    public void chat(String userType,int requestID){
+        MessageHandler messageHandler = MessageController.getHandler(requestID);
+        if(Objects.isNull(messageHandler)){
+            messageHandler = new MessageHandler(clientHandler,userType,requestID);
+            MessageController.addHandler(messageHandler);
+        }
+        try{
+            messageHandler.start();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
 
     public void removeBook() throws Exception{
         Map<String, String> arguments = new HashMap<>();

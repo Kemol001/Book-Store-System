@@ -14,7 +14,6 @@ import com.book.store.system.Handlers.*;
 public class BookStoreServer {
     private static final int PORT = 5000;
     private static final List<ClientHandler> clients = new ArrayList<>();
-    
     public static void main(String[] args) throws Exception {
         ServerSocket serverSocket = null;
         boolean dummyData = true;

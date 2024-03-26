@@ -27,7 +27,6 @@ public class ClientHandler implements Runnable, Handler{
         this.reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     }
 
-
     public void sendMessage(String message, boolean waitUserInput) {
         try {
             String eom = waitUserInput ? Constants.EOM + "\n" : "";
