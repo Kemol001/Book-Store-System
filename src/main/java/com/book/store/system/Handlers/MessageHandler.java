@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.book.store.system.Constants;
 import com.book.store.system.Controllers.UserController;
 import com.book.store.system.Database.Db;
 import com.book.store.system.Entities.Message;
@@ -13,10 +14,10 @@ public class MessageHandler implements Handler ,Runnable {
     public ClientHandler user1;
     public ClientHandler user2;
     public int requestId;
+    public int online = 0;
 
     private final LinkedBlockingQueue<Message> MessageQueue = new LinkedBlockingQueue<>();
 
-    private boolean chatEnded = false;
 
     public MessageHandler(ClientHandler user,String userType,int requestID){
         this.requestId = requestID;
@@ -29,7 +30,31 @@ public class MessageHandler implements Handler ,Runnable {
 
     @Override
     public void start() throws Exception {
-        run();
+        if(user1 != null){
+            //todo add a database query to retrieve old and pending messages
+            user1.writer.write("Chatting With "+user2.userController.getUser().userName+" (Type exit to exit chat)\n");
+            online++;
+        }
+        if(user2 != null){
+            //todo add a database query to retrieve old and pending messages
+            user2.writer.write("Chatting With "+user1.userController.getUser().userName+" (Type exit to exit chat)\n");
+            online++;
+        }
+        if(online == 2)
+            run();
+
+        else if(user1 != null){
+            String input = user1.reader.readLine();
+            while(!(input.equals(null)) && !(input.equals(Constants.EXIT))){
+                //query database to send messages
+            }
+        }
+        else if(user2 != null){
+            String input = user2.reader.readLine();
+            while(!(input.equals(null)) && !(input.equals(Constants.EXIT))){
+                //query database to send messages
+            }
+        }
     }
 
     @Override
@@ -40,7 +65,7 @@ public class MessageHandler implements Handler ,Runnable {
 
     // Method to send messages from both users to the original message queue
     synchronized private void sendMessages() {
-        while (!chatEnded) {
+        while (online == 2) {
             try {
                 String input = user1.reader.readLine();
                 if(!input.equals(null)){
@@ -66,6 +91,8 @@ public class MessageHandler implements Handler ,Runnable {
                         e.printStackTrace();
                     }
                 }
+                if((input == Constants.EXIT) || (input2 == Constants.EXIT))
+                    online --;
                 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -96,7 +123,6 @@ public class MessageHandler implements Handler ,Runnable {
 
     // Method to end the chat and flush messages to the database
     public void endChat() {
-        chatEnded = true;
         flushMessagesToDatabase();
     }
 
